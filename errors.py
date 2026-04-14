@@ -39,6 +39,11 @@ def register_error_handlers(app):
     def handle_405(_):
         return error_response("Method not allowed", status_code=405)
 
+    @app.errorhandler(413)
+    def handle_413(_):
+        from werkzeug.exceptions import RequestEntityTooLarge
+        return error_response("File size exceeds the maximum limit allowed", status_code=413)
+
     @app.errorhandler(Exception)
     def handle_generic_error(e: Exception):
         # Never expose raw exception to client

@@ -23,5 +23,5 @@ class Config:
 
     # ── Upload ───────────────────────────────────────────────
     UPLOAD_FOLDER       = os.path.join(os.path.dirname(__file__), "uploads")
-    MAX_CONTENT_LENGTH  = 5 * 1024 * 1024   # 5 MB
+    MAX_CONTENT_LENGTH  = 50 * 1024 * 1024   # 50 MB
     ALLOWED_EXTENSIONS  = {"jpg", "jpeg", "png", "webp"}

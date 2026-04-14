@@ -1,6 +1,7 @@
 import os
 import uuid
 from flask import Blueprint, request, g
+from PIL import Image
 from db import query
 from errors import success_response, AppError
 from middleware.admin_required import admin_required
@@ -48,10 +49,25 @@ def create_banner():
         raise AppError("Invalid image type. Allowed: jpg, jpeg, png, webp", 400)
 
     ext = file.filename.rsplit(".", 1)[1].lower()
-    filename = f"banner_{uuid.uuid4().hex}.{ext}"
+    filename = f"banner_{uuid.uuid4().hex}.webp"
     save_path = os.path.join(Config.UPLOAD_FOLDER, filename)
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
-    file.save(save_path)
+
+    try:
+        # Open the uploaded image and compress
+        img = Image.open(file)
+        # Convert to RGB (in case of PNG with alpha)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        
+        # Max dimensions for banner
+        max_size = (1920, 1080)
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        # Save as optimized webp
+        img.save(save_path, "WEBP", quality=80, optimize=True)
+    except Exception as e:
+        raise AppError(f"Failed to process image: {str(e)}", 500)
 
     image_url = f"/uploads/{filename}"
     title      = request.form.get("title", "")
