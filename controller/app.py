@@ -13,6 +13,7 @@ from controller.orders.routes import orders_bp
 from controller.payments.routes import payments_bp
 from controller.admin.routes import admin_bp
 from controller.profile.routes import profile_bp
+from controller.banners.routes import banners_bp, admin_banners_bp
 
 
 def create_app():
@@ -29,7 +30,7 @@ def create_app():
     Bcrypt(app)
 
     # Register all blueprints
-    for bp in [auth_bp, products_bp, cart_bp, orders_bp, payments_bp, admin_bp, profile_bp]:
+    for bp in [auth_bp, products_bp, cart_bp, orders_bp, payments_bp, admin_bp, profile_bp, banners_bp, admin_banners_bp]:
         app.register_blueprint(bp)
 
     # Global error handlers

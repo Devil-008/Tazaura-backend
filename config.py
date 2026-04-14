@@ -10,8 +10,8 @@ class Config:
     DB_HOST     = os.getenv("DB_HOST") or "localhost"
     DB_PORT     = int(os.getenv("DB_PORT") or 3306)
     DB_NAME     = os.getenv("DB_NAME") or "tazaura_db"
-    DB_USER     = os.getenv("DB_USER") or "root"
-    DB_PASSWORD = os.getenv("DB_PASSWORD") or "852456"
+    DB_USER     = os.getenv("DB_USER") or "tazaura_user"
+    DB_PASSWORD = os.getenv("DB_PASSWORD") or "Himanshu@100"
 
     # ── JWT ──────────────────────────────────────────────────
     JWT_SECRET          = os.getenv("JWT_SECRET", "change_me_in_production")
