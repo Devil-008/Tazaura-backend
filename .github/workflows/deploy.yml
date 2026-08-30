@@ -105,6 +105,7 @@ jobs:
               --restart unless-stopped \
               -p ${{ env.PORT }}:5000 \
               --env-file /root/tazaura/tazaura_be/.env \
+              -v /root/tazaura/uploads:/app/uploads \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:deploy-1
 
             echo "Checking container status..."
