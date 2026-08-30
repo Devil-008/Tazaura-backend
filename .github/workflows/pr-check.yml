@@ -1,0 +1,28 @@
+name: Backend PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - deploy-1
+
+jobs:
+  build-and-test:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: pr-test-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
