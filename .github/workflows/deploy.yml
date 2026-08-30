@@ -7,8 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: aiinhome-aivista/new_agent_2_be
-  CONTAINER_NAME: new-agent-2-be
+  IMAGE_NAME: devil-008/tazaura-backend
+  CONTAINER_NAME: tazaura-backend
   PORT: 3012
 
 jobs:
