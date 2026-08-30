@@ -103,7 +103,7 @@ jobs:
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               --restart unless-stopped \
-              -p ${{ env.PORT }}:${{ env.PORT }} \
+              -p ${{ env.PORT }}:5000 \
               --env-file /root/tazaura/tazaura_be/.env \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:deploy-1
 
