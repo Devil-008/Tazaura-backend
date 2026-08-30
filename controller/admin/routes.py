@@ -1,7 +1,9 @@
-from flask import Blueprint, request, g
+from flask import Blueprint, request, g, send_file
+from io import BytesIO
 from db import query
 from errors import success_response, AppError
 from middleware.admin_required import admin_required
+from helper.invoice import generate_invoice_pdf
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/v1/admin")
 
@@ -81,3 +83,74 @@ def toggle_user(user_id):
     new_status = 0 if user["is_active"] else 1
     query("UPDATE users SET is_active = %s WHERE id = %s", (new_status, user_id), commit=True)
     return success_response("User status toggled", {"is_active": bool(new_status)})
+
+
+@admin_bp.route("/orders/<int:order_id>", methods=["GET"])
+@admin_required
+def get_order_details(order_id):
+    order = query(
+        """SELECT o.*, u.name AS customer_name, u.email AS customer_email,
+                  a.full_name AS bill_to_name, a.phone AS bill_to_phone, 
+                  a.line1, a.line2, a.city, a.state, a.pincode
+           FROM orders o 
+           JOIN users u ON u.id = o.user_id
+           LEFT JOIN addresses a ON a.id = o.address_id
+           WHERE o.id = %s""",
+        (order_id,), fetchone=True,
+    )
+    if not order:
+        raise AppError("Order not found", 404)
+
+    items = query(
+        """SELECT oi.quantity, oi.unit_price, (oi.quantity * oi.unit_price) AS amount, 
+                  p.name, p.unit
+           FROM order_items oi 
+           JOIN products p ON p.id = oi.product_id
+           WHERE oi.order_id = %s""",
+        (order_id,),
+    )
+    payment = query(
+        "SELECT method, status, razorpay_payment_id, created_at FROM payments WHERE order_id = %s",
+        (order_id,), fetchone=True,
+    )
+    order["items"] = items
+    order["payment"] = payment
+    return success_response("Order details fetched", order)
+
+
+@admin_bp.route("/orders/<int:order_id>/invoice", methods=["GET"])
+@admin_required
+def download_invoice(order_id):
+    order = query(
+        """SELECT o.*, u.name AS customer_name, u.email AS customer_email,
+                  a.full_name AS bill_to_name, a.phone AS bill_to_phone, 
+                  a.line1, a.line2, a.city, a.state, a.pincode
+           FROM orders o 
+           JOIN users u ON u.id = o.user_id
+           LEFT JOIN addresses a ON a.id = o.address_id
+           WHERE o.id = %s""",
+        (order_id,), fetchone=True,
+    )
+    if not order:
+        raise AppError("Order not found", 404)
+
+    items = query(
+        """SELECT oi.quantity, oi.unit_price, (oi.quantity * oi.unit_price) AS amount, 
+                  p.name, p.unit
+           FROM order_items oi 
+           JOIN products p ON p.id = oi.product_id
+           WHERE oi.order_id = %s""",
+        (order_id,),
+    )
+    payment = query(
+        "SELECT method, status, razorpay_payment_id, created_at FROM payments WHERE order_id = %s",
+        (order_id,), fetchone=True,
+    )
+    
+    pdf_data = generate_invoice_pdf(order, items, payment)
+    return send_file(
+        BytesIO(pdf_data),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"invoice_{order_id}.pdf"
+    )

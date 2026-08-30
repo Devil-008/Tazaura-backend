@@ -100,41 +100,41 @@ def verify_payment():
 
     return success_response("Payment verified successfully", {"order_id": payment["order_id"]})
 
-@payments_bp.route("/cod", methods=["POST"])
-@auth_required
-def confirm_cod():
-    """Confirm a Cash on Delivery order."""
-    data = request.get_json(silent=True) or {}
-    order_id = data.get("order_id")
-    if not order_id:
-        raise AppError("order_id is required", 400)
-
-    order = query(
-        "SELECT id, total_price, status FROM orders WHERE id = %s AND user_id = %s",
-        (order_id, g.user_id), fetchone=True,
-    )
-    if not order:
-        raise AppError("Order not found", 404)
-    if order["status"] != "pending":
-        raise AppError("Order is not in pending state", 400)
-
-    # Check if a payment record already exists (e.g. they created Razorpay but didn't pay)
-    existing_payment = query("SELECT id FROM payments WHERE order_id = %s", (order_id,), fetchone=True)
-    if existing_payment:
-        query("UPDATE payments SET method = 'COD', status = 'pending' WHERE id = %s", (existing_payment["id"],), commit=True)
-    else:
-        # Insert payment record with method = 'COD', status = 'pending'
-        query(
-            """INSERT INTO payments (order_id, razorpay_order_id, amount, method, status)
-               VALUES (%s, %s, %s, 'COD', 'pending')""",
-            (order_id, f"cod_{order_id}", order["total_price"]),
-            commit=True,
-        )
-
-    # Update order status to 'processing'
-    query(
-        "UPDATE orders SET status = 'processing' WHERE id = %s",
-        (order_id,), commit=True,
-    )
-
-    return success_response("Order confirmed as Cash on Delivery", {"order_id": order_id})
+# @payments_bp.route("/cod", methods=["POST"])
+# @auth_required
+# def confirm_cod():
+#     """Confirm a Cash on Delivery order."""
+#     data = request.get_json(silent=True) or {}
+#     order_id = data.get("order_id")
+#     if not order_id:
+#         raise AppError("order_id is required", 400)
+# 
+#     order = query(
+#         "SELECT id, total_price, status FROM orders WHERE id = %s AND user_id = %s",
+#         (order_id, g.user_id), fetchone=True,
+#     )
+#     if not order:
+#         raise AppError("Order not found", 404)
+#     if order["status"] != "pending":
+#         raise AppError("Order is not in pending state", 400)
+# 
+#     # Check if a payment record already exists (e.g. they created Razorpay but didn't pay)
+#     existing_payment = query("SELECT id FROM payments WHERE order_id = %s", (order_id,), fetchone=True)
+#     if existing_payment:
+#         query("UPDATE payments SET method = 'COD', status = 'pending' WHERE id = %s", (existing_payment["id"],), commit=True)
+#     else:
+#         # Insert payment record with method = 'COD', status = 'pending'
+#         query(
+#             """INSERT INTO payments (order_id, razorpay_order_id, amount, method, status)
+#                VALUES (%s, %s, %s, 'COD', 'pending')""",
+#             (order_id, f"cod_{order_id}", order["total_price"]),
+#             commit=True,
+#         )
+# 
+#     # Update order status to 'processing'
+#     query(
+#         "UPDATE orders SET status = 'processing' WHERE id = %s",
+#         (order_id,), commit=True,
+#     )
+# 
+#     # return success_response("Order confirmed as Cash on Delivery", {"order_id": order_id})
